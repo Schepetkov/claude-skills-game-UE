@@ -1,0 +1,23 @@
+# Secrets — never commit API keys
+.env
+.env.*
+!.env.example
+
+# Meshy skill output
+meshy_output/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
