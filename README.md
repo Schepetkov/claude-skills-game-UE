@@ -3,7 +3,7 @@
 
 Agent Skills that make [Claude Code](https://claude.com/claude-code) genuinely useful on an Unreal Engine project instead of confidently wrong about it.
 
-Six skills covering networking, lighting, assets, performance, UI, and AI 3D-asset generation. Written against **UE 5.8** and verified against a 5.8.1 source tree — not recalled from training data.
+Seven skills covering networking, lighting, assets, performance, UI, the engine's new built-in MCP server, and AI 3D-asset generation. Written against **UE 5.8** and verified against a 5.8.1 source tree — not recalled from training data.
 
 [Русская версия](README.ru.md)
 
@@ -33,7 +33,10 @@ The rest is what the docs don't put in one place: decision trees, cost orderings
 | **`ue-assets`** | Import (Interchange/FBX/glTF), Nanite (static/skeletal/foliage/assemblies), collision, UVs, textures, instancing, HLOD | Importing meshes, Nanite vs LOD, bad collision or scale, cutting mesh/texture memory |
 | **`ue-performance`** | `stat unit` → bottleneck, Unreal Insights, GPU Visualizer, PSO precaching, tick/Blueprint cost, GC, streaming | Anything slow or stuttery. Setting a frame budget. Before claiming an optimization worked |
 | **`ue-ui`** | UMG + Slate, CommonUI, the 5.8 **Unified Input System**, gamepad focus/navigation, DPI & safe zones, widget perf | HUD/menus, gamepad UI, focus bugs, UI eating frame time |
+| **`ue-mcp`** | UE 5.8's built-in **Unreal MCP** server — setup, the 27 toolsets, tool search, custom tools in C++/Python, safety | Connecting an agent to a live editor. Writing project-specific MCP tools |
 | **`meshy-3d-generation`** | [Meshy AI](https://meshy.ai) API — text/image→3D, texturing, rigging, animation | Generating 3D assets. Pairs with `ue-assets` for the cleanup pass before import |
+
+`ue-mcp` is the one that changes the others: with the editor connected, the agent can inspect the live Slate tree, read actor properties, and run automation tests instead of inferring from `.uasset` files it cannot read.
 
 Each UE skill is a `SKILL.md` plus reference files that load only when needed — cvar tables, cookbooks, checklists.
 
@@ -41,6 +44,7 @@ Each UE skill is a `SKILL.md` plus reference files that load only when needed �
 
 These skills are current on the 5.8 deltas, not 5.3-era advice:
 
+- **Built-in MCP server** — `Engine/Plugins/Experimental/ModelContextProtocol`, first-party, experimental, off by default. Agents can drive the editor over `http://127.0.0.1:8000/mcp`
 - **Iris is production-ready** (Experimental through 5.7) — with the real enable path, not the blog version
 - **Lumen Lite** — new Medium GI tier, ~2× faster than high quality, targets 60 fps on PS5/handhelds. **SSGI is deprecated** in its favour
 - **MegaLights production-ready** — much lower noise, early cull by light power
