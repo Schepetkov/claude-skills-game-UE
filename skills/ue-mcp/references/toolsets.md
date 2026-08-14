@@ -1,11 +1,14 @@
 # Unreal MCP toolsets — UE 5.8
 
-The 27 toolset plugins that ship in `Engine/Plugins/Experimental/Toolsets/`. `AllToolsets` enables all of them; enabling individual ones keeps the surface smaller.
+The 26 toolset plugins that ship in `Engine/Plugins/Experimental/Toolsets/` in UE 5.8.1, plus the `AllToolsets` aggregator.
 
-Re-derive the list for your engine:
+⚠️ **`AllToolsets` does not enable all of them.** It depends on **21** of the 26. Five are excluded and must be enabled by hand — marked 🔸 below. `AllToolsets` has no `Modules` of its own, so it never needs building.
+
+Re-derive both lists for your engine:
 
 ```bash
-ls Engine/Plugins/Experimental/Toolsets/
+ls Engine/Plugins/Experimental/Toolsets/                                        # what exists
+grep '"Name"' Engine/Plugins/Experimental/Toolsets/AllToolsets/AllToolsets.uplugin   # what the aggregator pulls in
 ```
 
 Then inspect what a specific toolset actually exposes:
@@ -26,14 +29,14 @@ grep -rn "AICallable" Engine/Plugins/Experimental/Toolsets/<Name>/Source/
 | `ConfigSettingsToolset` | read/write project and editor settings, including the cvars the other skills discuss |
 | `PluginToolset` | plugin enumeration and state |
 | `SemanticSearchToolset` | find assets by meaning rather than exact name |
-| `LiveCodingToolset` | trigger Live Coding — C++ iteration without an editor restart |
+| 🔸 `LiveCodingToolset` | trigger Live Coding — C++ iteration without an editor restart. **Not in `AllToolsets`** — enable it explicitly, it is one of the most useful for C++ work |
 
 ### UI
 | Toolset | What it's for |
 |---|---|
 | `SlateInspectorToolset` | inspect the **live** Slate widget tree. The single most useful tool for UI debugging — see `ue-ui` |
 | `UMGToolSet` | UMG widget assets |
-| `MVVMToolset` | ViewModel bindings |
+| 🔸 `MVVMToolset` | ViewModel bindings. **Not in `AllToolsets`** |
 
 ### Gameplay & AI
 | Toolset | What it's for |
@@ -53,11 +56,11 @@ grep -rn "AICallable" Engine/Plugins/Experimental/Toolsets/<Name>/Source/
 | `NiagaraToolsets` | Niagara systems and emitters |
 | `PCGToolset` | Procedural Content Generation graphs |
 | `PhysicsToolsets` | physics assets, constraints, simulation |
-| `ChaosClothAssetToolset` | Chaos cloth |
+| 🔸 `ChaosClothAssetToolset` | Chaos cloth. **Not in `AllToolsets`** |
 | `DataflowAgent` | Dataflow graphs |
 | `AnimationAssistantToolset` | animation assets and blueprints |
-| `SequencerAnimMixerToolset` | Sequencer anim mixing |
-| `MetaHumanGenerator` | MetaHuman generation |
+| 🔸 `SequencerAnimMixerToolset` | Sequencer anim mixing. **Not in `AllToolsets`**, and not built in a default engine build |
+| 🔸 `MetaHumanGenerator` | MetaHuman generation. **Not in `AllToolsets`** |
 
 ### Testing & meta
 | Toolset | What it's for |
@@ -77,8 +80,11 @@ A reasonable minimal set for gameplay-focused C++ work:
 
 ```
 EditorToolset, ConfigSettingsToolset, AutomationTestToolset,
-SlateInspectorToolset, UMGToolSet, StateTreeToolset, AIModuleToolset
+SlateInspectorToolset, UMGToolSet, StateTreeToolset, AIModuleToolset,
+LiveCodingToolset            # 🔸 not in AllToolsets - add it explicitly
 ```
+
+If a toolset's plugin has never been built (check `<Toolset>/Binaries/Win64/`), enabling it triggers a module build on the next editor launch. `AllToolsets` itself has no modules, so it is never the thing that needs building.
 
 ## Verifying what a toolset can actually do
 

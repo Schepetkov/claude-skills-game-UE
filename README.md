@@ -33,7 +33,7 @@ The rest is what the docs don't put in one place: decision trees, cost orderings
 | **`ue-assets`** | Import (Interchange/FBX/glTF), Nanite (static/skeletal/foliage/assemblies), collision, UVs, textures, instancing, HLOD | Importing meshes, Nanite vs LOD, bad collision or scale, cutting mesh/texture memory |
 | **`ue-performance`** | `stat unit` → bottleneck, Unreal Insights, GPU Visualizer, PSO precaching, tick/Blueprint cost, GC, streaming | Anything slow or stuttery. Setting a frame budget. Before claiming an optimization worked |
 | **`ue-ui`** | UMG + Slate, CommonUI, the 5.8 **Unified Input System**, gamepad focus/navigation, DPI & safe zones, widget perf | HUD/menus, gamepad UI, focus bugs, UI eating frame time |
-| **`ue-mcp`** | UE 5.8's built-in **Unreal MCP** server — setup, the 27 toolsets, tool search, custom tools in C++/Python, safety | Connecting an agent to a live editor. Writing project-specific MCP tools |
+| **`ue-mcp`** | UE 5.8's built-in **Unreal MCP** server — setup, the 26 toolsets (and which 5 `AllToolsets` silently skips), tool search, custom tools in C++/Python, safety | Connecting an agent to a live editor. Writing project-specific MCP tools |
 | **`meshy-3d-generation`** | [Meshy AI](https://meshy.ai) API — text/image→3D, texturing, rigging, animation | Generating 3D assets. Pairs with `ue-assets` for the cleanup pass before import |
 
 `ue-mcp` is the one that changes the others: with the editor connected, the agent can inspect the live Slate tree, read actor properties, and run automation tests instead of inferring from `.uasset` files it cannot read.

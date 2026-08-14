@@ -36,6 +36,22 @@ grep -rhoE '"ModelContextProtocol\.[A-Za-z]+"' Engine/Plugins/Experimental/Model
 
 `ToolsetRegistry` and `EngineAssetDefinitions` are pulled in automatically as plugin dependencies. Restart the editor.
 
+⚠️ **`AllToolsets` is not all toolsets.** In 5.8.1 there are 26 toolset plugins on disk and the aggregator depends on only **21**. These five must be enabled by hand if you want them:
+
+```
+ChaosClothAssetToolset, LiveCodingToolset, MetaHumanGenerator,
+MVVMToolset, SequencerAnimMixerToolset
+```
+
+Verify for your engine — the list will drift:
+
+```bash
+ls Engine/Plugins/Experimental/Toolsets/          # what exists
+grep '"Name"' Engine/Plugins/Experimental/Toolsets/AllToolsets/AllToolsets.uplugin
+```
+
+`AllToolsets` itself has no `Modules` — it is a pure aggregator, so it has no binaries and never needs building.
+
 **2. Start the server.** It does **not** auto-start — `bAutoStartServer` defaults to `false`:
 
 ```
@@ -130,7 +146,7 @@ That said: MCP is not a profiler and not a substitute for measurement. `stat uni
 
 ## Toolsets
 
-27 toolset plugins ship in `Engine/Plugins/Experimental/Toolsets/`. `AllToolsets` enables the lot; you can instead enable individual ones to keep the surface small.
+26 toolset plugins ship in `Engine/Plugins/Experimental/Toolsets/` (5.8.1). `AllToolsets` enables 21 of them — see the warning in Setup; you can also enable individual ones to keep the surface small.
 
 Highest-value ones, and which of the other skills they pair with:
 
