@@ -3,7 +3,7 @@
 
 Agent Skills that make [Claude Code](https://claude.com/claude-code) genuinely useful on an Unreal Engine project instead of confidently wrong about it.
 
-Nine skills: eight covering networking, lighting, assets, performance, UI, cinematics, the engine's new built-in MCP server, and AI 3D-asset generation — written against **UE 5.8** and verified against a 5.8.1 source tree, not recalled from training data — plus one engine-agnostic skill for how the agent itself works on a long project: retros, a task journal, memory hygiene, independent review.
+Ten skills: eight covering networking, lighting, assets, performance, UI, cinematics, the engine's new built-in MCP server, and AI 3D-asset generation — written against **UE 5.8** and verified against a 5.8.1 source tree, not recalled from training data — plus two engine-agnostic ones for how the agent itself works on a long project: retros, a task journal, memory hygiene, independent review, and a `/retro` command that closes a session.
 
 And tooling for running several agent sessions on one live editor: an editor-lock hook so they don't stop each other's PIE or crash each other with Live Coding, and a scene probe that lets the agent read what is on screen instead of asking you to look.
 
@@ -39,6 +39,7 @@ The rest is what the docs don't put in one place: decision trees, cost orderings
 | **`ue-mcp`** | UE 5.8's built-in **Unreal MCP** server — setup, the 26 toolsets (and which 5 `AllToolsets` silently skips), tool search, custom tools in C++/Python, safety, field notes. **Parallel sessions** on one editor with an opt-in lock hook; a **scene probe** C++ template (scene state as JSON) and a `RunConsole` tool | Connecting an agent to a live editor. Writing project-specific MCP tools. Several sessions on one editor. Letting the agent check a scene itself |
 | **`meshy-3d-generation`** | [Meshy AI](https://meshy.ai) API — text/image→3D, texturing, rigging, animation | Generating 3D assets. Pairs with `ue-assets` for the cleanup pass before import |
 | **`agent-workflow`** | Engine-agnostic working discipline: a retro after every significant task whose output is a change (skill, rule, hook, tool), a sqlite task journal with rounds-per-area stats, auto-memory hygiene, speaking up, review by a second model, measured skill optimization | A task took several rounds of corrections. Memory feels stale. Before committing to a spec. "Why does this keep happening?" |
+| **`retro`** | The `/retro` command: closes a session or an accepted task — rounds and causes, a change per cause, what worked written down, stale memory cleaned, shared-skill lessons committed, a journal entry, a few-line report | End of a session. A task was accepted or abandoned. Typed by the human, never auto-loaded |
 
 `ue-mcp` is the one that changes the others: with the editor connected, the agent can inspect the live Slate tree, read actor properties, and run automation tests instead of inferring from `.uasset` files it cannot read.
 
@@ -143,6 +144,7 @@ Typical prompts that trigger them:
 - *"Gamepad can't reach the settings menu"* → `ue-ui`
 - *"Two of us are on the same editor and my PIE keeps getting stopped"* → `ue-mcp` (editor lock)
 - *"That took four rounds, do the retro"* → `agent-workflow`
+- *End of the session* → type `/retro` (or `/retro <task>`)
 
 ---
 

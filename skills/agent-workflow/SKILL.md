@@ -40,11 +40,16 @@ accepts the work (or abandons it), not later.
 | Tool got in the way (crash, lock, slow build) | a hook, a script, a field note |
 | Process collision (another session, dirty tree) | a rule + enforcement (hook), not a reminder |
 
-3. **Make the change now** — edit the skill, add the rule, write the hook, or file the tool task. A lesson that
-   applies beyond this project goes into a shared skill; a project-only one into the project's CLAUDE.md or skill.
-4. **Record it** in the journal (below). `changes` empty with rounds > 0 = the retro is not done.
-5. Tell the human in **one line**: rounds, main cause, what changed. Not a report.
+3. **Keep what worked.** An approach that landed first try or that the human praised is written down the same
+   way as a mistake — otherwise the next session rediscovers it by luck.
+4. **Make the change now** — edit the skill, add the rule, write the hook, or file the tool task. A lesson that
+   applies beyond this project goes into a **shared skill** — written so a stranger can use it (no project names,
+   personal paths, ids), with its source — and is **committed and pushed** in the skills repo right away; a
+   project-only one goes into the project's CLAUDE.md or skill.
+5. **Record it** in the journal (below). `changes` empty with rounds > 0 = the retro is not done.
+6. Tell the human in **a few lines**: rounds, main cause, what changed, what was kept. Not a report.
 
+The human can trigger the whole procedure with **`/retro`** (the `retro` skill in this repo).
 Template and worked examples: [references/retro.md](references/retro.md).
 
 ## 2. Task journal
