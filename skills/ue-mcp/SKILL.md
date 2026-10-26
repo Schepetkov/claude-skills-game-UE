@@ -1,6 +1,6 @@
 ---
 name: ue-mcp
-description: Unreal Engine 5.8's built-in MCP server (Unreal MCP plugin) — enabling it, connecting Claude Code/Cursor/Codex to a running editor, the toolset registry and tool-search model, writing custom tools in C++/Python, and the safety rules for letting an agent drive the editor. Use when setting up or debugging the Unreal MCP connection, deciding which toolsets to enable, adding project-specific MCP tools, or when a task would be better done by inspecting the live editor than by reading files.
+description: Unreal Engine 5.8's built-in MCP server (Unreal MCP plugin) — enabling it, connecting Claude Code/Cursor/Codex to a running editor, the toolset registry and tool-search model, writing custom tools in C++/Python, and the safety rules for letting an agent drive the editor. Use when setting up or debugging the Unreal MCP connection, deciding which toolsets to enable, adding project-specific MCP tools, running several agent sessions on one editor (PIE/Live Coding/build collisions, the editor-lock hook), letting the agent check a scene itself (scene-state JSON probe), or when a task would be better done by inspecting the live editor than by reading files.
 license: MIT
 metadata:
   engine: "Unreal Engine 5.8"
@@ -215,6 +215,37 @@ Test with `ModelContextProtocol.ToolCall` before involving an agent — that iso
 
 **When a custom tool is worth writing:** when the agent repeatedly needs a project-specific fact that no generic toolset exposes (turn state, grid occupancy, a custom subsystem's status). Do not wrap things `EditorToolset` already does.
 
+## Parallel sessions on one editor
+
+Several agent sessions (and the human) can share one editor. Calls are serialised on the game thread, and a few
+operations change the editor for everyone:
+
+| Exclusive (lock) | Lock-free |
+|---|---|
+| start/stop PIE, Live Coding, load level, Build.bat/UBT, closing the editor, commandlets | reading anything, editing **your own** assets with an immediate save, scene snapshots, captures |
+
+- **A PIE running while the lock is free is the human's — never stop it.**
+- **Live Coding patches every source newer than the DLL** — a peer's half-written header too — and can crash the
+  editor for everyone. With several sessions editing C++: take the lock, full build with the editor closed.
+- **`-game` runs load the last full build**, never Live Coding patches.
+- The lock is a **file + Claude Code hook**, not an MCP tool: the exclusive ops (build, close, commandlets) happen
+  while the editor is down, and MCP calls carry no session identity — hook events carry `session_id`.
+  Opt-in hook: [`hooks/editor-lock.py`](hooks/editor-lock.py); settings snippet, tuning and a pipe test in
+  [references/parallel-sessions.md](references/parallel-sessions.md).
+
+## Seeing the scene — scene probe
+
+The agent cannot see the viewport. Give it numbers: [`templates/SceneProbe/`](templates/SceneProbe/) is a
+`UTickableWorldSubsystem` (Game + PIE) plus an `Agent.SceneState [filter] [file]` command that writes
+`Saved/AgentRuns/<file>.json`: camera and cuts (detected by view jumps), every character's anim state,
+`WasRecentlyRendered`, head position on screen, gap to the floor, and warnings (T-pose, floating, focus actor
+off-screen). An optional `RunConsole` MCP tool (editor module) runs it from the agent.
+
+- **Write a file, always.** A console-running tool returns the command's output device, not `UE_LOG` text.
+- **Two snapshots seconds apart** reveal a frozen clip; one never can.
+- New `UCLASS` → **full build**, not Live Coding.
+- Check scenes yourself before showing the human. Details and recipes: [references/scene-probe.md](references/scene-probe.md).
+
 ## Troubleshooting
 
 | Symptom | Cause |
@@ -227,6 +258,10 @@ Test with `ModelContextProtocol.ToolCall` before involving an agent — that iso
 | Tool called with wrong arguments | the docstring/doc comment is the schema — make it precise |
 | Huge responses eating context | lower `ModelContextProtocol.PaginationPageSize`; confirm `bEnableToolSearch` is on |
 | Connection refused from another machine | working as designed — loopback only, non-loopback `Origin` rejected |
+| Save "succeeds" but nothing on disk; "Asset does not exist" | PIE running, or Git LFS read-only file — see [references/field-notes.md](references/field-notes.md) |
+| Need console/cvars or Python from the agent | no shipped tool — add a project `RunConsole` tool; details in field-notes |
+| Another session stopped your PIE / closed the editor | no editor lock — install the hook ([references/parallel-sessions.md](references/parallel-sessions.md)) |
+| `RunConsole` returns "no output" for a command that logs | `UE_LOG` is not captured — make the command write a file (scene probe does) |
 
 ## Related
 
@@ -234,3 +269,7 @@ Test with `ModelContextProtocol.ToolCall` before involving an agent — that iso
 - **`ue-ui`** — `SlateInspectorToolset` beats reading widget Blueprints blind
 - **`ue-assets`** — inspect imported meshes' live settings instead of inferring
 - [references/toolsets.md](references/toolsets.md) — the full 27-toolset list
+- [references/field-notes.md](references/field-notes.md) — verified pitfalls: calling, saving, materials, Niagara, capture, Live Coding, Python
+- [references/parallel-sessions.md](references/parallel-sessions.md) — several sessions on one editor, the lock hook
+- [references/scene-probe.md](references/scene-probe.md) — scene-state JSON for the agent, template usage, recipes
+- **`agent-workflow`** — the retro loop that produced the lock and the probe

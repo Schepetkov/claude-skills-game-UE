@@ -40,8 +40,11 @@ These skills are read by an agent, not a human browsing docs. Optimise according
 ```
 skills/<skill-name>/
 ├── SKILL.md              # required — frontmatter + the decision content
-└── references/           # optional — loaded on demand
-    └── <topic>.md
+├── references/           # optional — loaded on demand
+│   └── <topic>.md
+├── scripts/              # optional — tools the skill runs (Python 3 stdlib preferred)
+├── hooks/                # optional — Claude Code hooks; opt-in, documented with a settings snippet and a pipe test
+└── templates/            # optional — code to copy into a project; say which engine version it targets
 ```
 
 `SKILL.md` frontmatter:
@@ -63,7 +66,7 @@ The `description` is doing more work than anything else in the file. Write it as
 
 ## Adding a new skill
 
-Gaps worth filling: animation & control rig, audio & MetaSounds, physics & Chaos, Sequencer & cinematics, Gameplay Ability System, build/packaging & CI, World Partition authoring, mobile/Switch targets.
+Gaps worth filling: animation & control rig, audio & MetaSounds, physics & Chaos, Gameplay Ability System, build/packaging & CI, World Partition authoring, mobile/Switch targets.
 
 Before opening a PR:
 

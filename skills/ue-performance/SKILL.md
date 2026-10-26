@@ -159,6 +159,12 @@ gc.MaxObjectsInGame                 # raise only with evidence; it costs memory
 - `s.LevelStreamingLowMemoryActorsPendingPurgeCount`
 - `wp.Runtime.LevelStreamingContinuouslyIncrementalGCWhileActorsPendingPurgeForWP` (World Partition variant)
 
+**Cooked-only GC crash — UObject cache on a native CDO.** Native CDOs (and objects created during module load) sit in
+the disregard-for-GC set in cooked builds (closed in `PreInitPostStartupScreen`), so the GC never walks their
+`UPROPERTY` references: a `TMap<…, TObjectPtr<UTexture2D>>` cache on a CDO lets the texture die and the next GC crashes
+on a dangling pointer. PIE has no disregard set and never shows it. Cache with `TStrongObjectPtr` / `AddToRoot` instead;
+subsystems are created after the set closes and may use `UPROPERTY`. Without a debugger: dbghelp via ctypes on the
+minidump + `dumpbin /disasm`; a crash in `FlushQueuedReferences` points at the owner of the bad field.
 These smooth GC across frames instead of paying it in one spike — the right first move when you see periodic identical-size hitches.
 
 **Streaming (5.8):**
@@ -166,6 +172,16 @@ These smooth GC across frames instead of paying it in one spike — the right fi
 - HLOD visibility updates are ~139× faster (Epic's CitySample number), with SSIM perceptual diff avoiding needless rebuilds.
 - PCG runtime generation scheduler cut game-thread cost up to 30%; `pcg.RuntimeGeneration.TimeBetweenRuntimeGenSchedulerTicks` reduces scheduling overhead further.
 
+## Measuring without a console (standalone run)
+
+When the agent cannot type `stat unit`: put a `CameraActor` with `AutoActivateForPlayer=Player0` in the map, launch
+`UnrealEditor.exe <uproject> <map> -game -windowed -ResX= -ResY= -csvCaptureFrames=900 -ExitAfterCsvProfiling`. The CSV lands
+in **`<Engine>/Saved/Profiling/CSV/`** with `FrameTime`, `GameThreadTime`, `RenderThreadTime`, `GPUTime`, `RHI/DrawCalls`.
+- `csv.field_size_limit(10**9)` — a metadata field exceeds the default. The header may grow during the run
+  (`[HasHeaderRowAtEnd]`): read by the last header, take `rows[-2]`.
+- A backgrounded window is frame-capped by the game's own setting (e.g. 30 fps) — pass an `-ini:GameUserSettings:` override.
+- The first run compiles shaders: take the median of three. Another editor of the same machine open = numbers up to 2× worse.
+- Commands at a frame: `"-csvExecCmds=400:<cmd> <arg>,450:HighResShot 1"` (comma-separated, args with spaces).
 ## Frame budget: state it before optimizing
 
 At 60 fps you have **16.6 ms**; at 30 fps, 33.3 ms. Split it explicitly, e.g. for 60 fps:

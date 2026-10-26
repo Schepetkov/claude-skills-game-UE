@@ -3,7 +3,9 @@
 
 Agent Skills that make [Claude Code](https://claude.com/claude-code) genuinely useful on an Unreal Engine project instead of confidently wrong about it.
 
-Seven skills covering networking, lighting, assets, performance, UI, the engine's new built-in MCP server, and AI 3D-asset generation. Written against **UE 5.8** and verified against a 5.8.1 source tree — not recalled from training data.
+Nine skills: eight covering networking, lighting, assets, performance, UI, cinematics, the engine's new built-in MCP server, and AI 3D-asset generation — written against **UE 5.8** and verified against a 5.8.1 source tree, not recalled from training data — plus one engine-agnostic skill for how the agent itself works on a long project: retros, a task journal, memory hygiene, independent review.
+
+And tooling for running several agent sessions on one live editor: an editor-lock hook so they don't stop each other's PIE or crash each other with Live Coding, and a scene probe that lets the agent read what is on screen instead of asking you to look.
 
 [Русская версия](README.ru.md)
 
@@ -33,12 +35,23 @@ The rest is what the docs don't put in one place: decision trees, cost orderings
 | **`ue-assets`** | Import (Interchange/FBX/glTF), Nanite (static/skeletal/foliage/assemblies), collision, UVs, textures, instancing, HLOD | Importing meshes, Nanite vs LOD, bad collision or scale, cutting mesh/texture memory |
 | **`ue-performance`** | `stat unit` → bottleneck, Unreal Insights, GPU Visualizer, PSO precaching, tick/Blueprint cost, GC, streaming | Anything slow or stuttery. Setting a frame budget. Before claiming an optimization worked |
 | **`ue-ui`** | UMG + Slate, CommonUI, the 5.8 **Unified Input System**, gamepad focus/navigation, DPI & safe zones, widget perf | HUD/menus, gamepad UI, focus bugs, UI eating frame time |
-| **`ue-mcp`** | UE 5.8's built-in **Unreal MCP** server — setup, the 26 toolsets (and which 5 `AllToolsets` silently skips), tool search, custom tools in C++/Python, safety | Connecting an agent to a live editor. Writing project-specific MCP tools |
+| **`ue-cinematics`** | Directing in-engine cutscenes and dialogue: beats, blocking, axis/180, coverage kit with lenses, cutting on line events, creature reveals, Sequencer over MCP (339 tools), FK Control Rig additive layers and baking, runtime playback | Staging a cutscene or conversation. "Our cinematics look flat." Editing a clip for a scene |
+| **`ue-mcp`** | UE 5.8's built-in **Unreal MCP** server — setup, the 26 toolsets (and which 5 `AllToolsets` silently skips), tool search, custom tools in C++/Python, safety, field notes. **Parallel sessions** on one editor with an opt-in lock hook; a **scene probe** C++ template (scene state as JSON) and a `RunConsole` tool | Connecting an agent to a live editor. Writing project-specific MCP tools. Several sessions on one editor. Letting the agent check a scene itself |
 | **`meshy-3d-generation`** | [Meshy AI](https://meshy.ai) API — text/image→3D, texturing, rigging, animation | Generating 3D assets. Pairs with `ue-assets` for the cleanup pass before import |
+| **`agent-workflow`** | Engine-agnostic working discipline: a retro after every significant task whose output is a change (skill, rule, hook, tool), a sqlite task journal with rounds-per-area stats, auto-memory hygiene, speaking up, review by a second model, measured skill optimization | A task took several rounds of corrections. Memory feels stale. Before committing to a spec. "Why does this keep happening?" |
 
 `ue-mcp` is the one that changes the others: with the editor connected, the agent can inspect the live Slate tree, read actor properties, and run automation tests instead of inferring from `.uasset` files it cannot read.
 
 Each UE skill is a `SKILL.md` plus reference files that load only when needed — cvar tables, cookbooks, checklists.
+
+### The agent workflow
+
+The UE skills make the agent right about the engine. `agent-workflow` and the `ue-mcp` tooling make it cheaper to work with over months:
+
+- **Retro → change.** After each significant task the agent counts the rounds of corrections, names the cause of each, and makes a change that removes it — a skill row, a rule, a hook, a tool — then logs it in `journal.py`. `journal.py stats` shows rounds per area over time and which changes preceded fewer rounds.
+- **The agent checks its own scene.** `Agent.SceneState` writes camera, cuts, characters' animation state, on-screen head positions, floor gaps and warnings to JSON — the agent reads it over MCP before showing you anything.
+- **Parallel sessions don't collide.** A file lock taken by a Claude Code hook guards PIE, Live Coding, level loads, builds and editor restarts; a PIE running without the lock is yours and is never stopped.
+- **Memory stays honest.** State notes expire once accepted, lessons move into skills, claims are checked against git.
 
 ### What 5.8 specifically changed
 
@@ -58,7 +71,7 @@ These skills are current on the 5.8 deltas, not 5.3-era advice:
 
 ## Install
 
-**Requires:** [Claude Code](https://claude.com/claude-code). The UE skills need no other dependencies. `meshy-3d-generation` needs Python 3 with `requests` and a Meshy API key.
+**Requires:** [Claude Code](https://claude.com/claude-code). The UE skills need no other dependencies. `meshy-3d-generation` needs Python 3 with `requests` and a Meshy API key. The journal (`agent-workflow/scripts/journal.py`) and the editor-lock hook need Python 3, standard library only.
 
 ### Option A — user level (available in every project)
 
@@ -97,6 +110,20 @@ cp -r /path/to/claude-skills-game-UE/skills/ue-lighting .claude/skills/
 
 Verify with `/skills` in Claude Code — the installed skills should be listed.
 
+### Optional — the editor-lock hook (per project)
+
+Skills install themselves; hooks don't. If more than one agent session (or you and an agent) will use one editor, opt in per project:
+
+```bash
+# from your UE project root
+mkdir -p .claude/hooks
+cp ~/.claude/skills/ue-mcp/hooks/editor-lock.py .claude/hooks/
+```
+
+Then add `PreToolUse`, `PostToolUse` and `PostToolUseFailure` hooks on `mcp__unreal__call_tool|Bash|PowerShell` to `.claude/settings.json`, calling `python "$CLAUDE_PROJECT_DIR/.claude/hooks/editor-lock.py" pre` / `post`. The full snippet, the env vars, how to tune the patterns and a pipe test are in [`skills/ue-mcp/references/parallel-sessions.md`](skills/ue-mcp/references/parallel-sessions.md). The lock file goes to `<your .uproject dir>/Saved/AgentLock.json`; `python .claude/hooks/editor-lock.py status|release` inspects or clears it.
+
+The scene probe is C++ you add to your project: copy [`skills/ue-mcp/templates/SceneProbe/`](skills/ue-mcp/templates/SceneProbe/) into your modules and do a full build — see [`scene-probe.md`](skills/ue-mcp/references/scene-probe.md).
+
 ---
 
 ## Usage
@@ -114,6 +141,8 @@ Typical prompts that trigger them:
 - *"Should this mesh be Nanite?"* → `ue-assets`
 - *"The game stutters when a new enemy type first spawns"* → `ue-performance` (PSO precaching)
 - *"Gamepad can't reach the settings menu"* → `ue-ui`
+- *"Two of us are on the same editor and my PIE keeps getting stopped"* → `ue-mcp` (editor lock)
+- *"That took four rounds, do the retro"* → `agent-workflow`
 
 ---
 
@@ -129,7 +158,8 @@ Typical prompts that trigger them:
 **Won't:**
 - Guarantee a cvar name without you having an engine source tree to check against. With a Launcher-only install, the skills fall back to runtime verification (`DumpConsoleCommands`, console autocomplete) and say which method they used
 - Cover Blueprint-only workflows in depth — the bias is C++ with Blueprint at the leaves
-- Cover animation, audio, physics, or Sequencer. Contributions welcome
+- Cover audio, physics, or animation beyond what cinematics needs. Contributions welcome
+- Compile the C++ templates for you — `SceneProbe` is written against 5.8 engine APIs but must be built in your project
 
 ---
 

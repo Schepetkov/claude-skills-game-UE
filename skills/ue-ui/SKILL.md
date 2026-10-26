@@ -166,6 +166,25 @@ General, but especially load-bearing for strategy/simulation UIs:
 | UI tiny or huge on a different monitor | DPI curve untested at that resolution |
 | Hitch when a menu first opens | widget constructed on demand + font atlas build. Preload and pool |
 | `BindWidget` failure at runtime | widget renamed in the Blueprint — check the property is `meta = (BindWidget)` and the names match |
+| `NativeTick` never called on a CommonUI screen | `UCommonActivatableWidget` descendants carry `DisableNativeTick` — drive animation from a ticker/timer or hover/focus events |
+| Editor builds, Shipping does not | `UPanelWidget::ReplaceChild/ReplaceChildAt` and `GetDisplayLabel` are `WITH_EDITOR` — write your own child swap |
+| Widget added with `SetPositionInViewport` flies off-screen | 5.8 `SetPositionInViewport`/`SetDesiredSizeInViewport` reset anchors to (0,0) — call `SetAnchorsInViewport` last, or position inside the widget |
+| Box/9-slice frame drawn as a thin line, "fixed" by touching the texture | margins use the texture proxy's size, created once on first paint while the texture was still compiling. `FTextureCompilingManager::FinishCompilation` + `ReleaseDynamicResource(Brush)` before use |
+| 9-slice corners the wrong size | corner on screen = **texture** width × Margin; `ImageSize` does not matter — size the texture for the screen |
+| UI texture blurry / grey box in PIE | texture in World group with mips/streaming — UI group, `NoMipmaps` or NeverStream |
+| `FSlateDrawElement::MakeBox` ignores the brush tint | it tints with the argument colour — pass `Brush.TintColor * InWidgetStyle` |
+| RoundedBox not drawn | corner radius larger than half the height |
+| Border with collapsed content vanishes | a `UBorder` sizes to its content; keep an empty SizeBox instead of collapsing |
+| Outlined text sits lower than unoutlined | `OutlineSize` offsets the glyphs by the outline — compensate, do glows with separate shapes |
+| `UImage::SetDesiredSizeOverride` has no effect | set `Brush.ImageSize` or wrap in a SizeBox |
+| Pooled children stretch in a HorizontalBox | slot default is Fill — set Automatic from C++ |
+| Overlay row gets height 0 | `SOverlay` clamps a child to the overlay minus padding — the overlay must hold all rows |
+| Gamepad A clicks an invisible cursor and switches input to mouse | `CommonUI.ShouldVirtualAcceptSimulateMouseButton` (default true) — set false |
+| UHT error on a UFUNCTION parameter | a parameter named `Navigation` shadows `UWidget::Navigation` |
+| Nested WBP instance keeps old values | the parent WBP's template holds them — recompile the parent; CDO edits of the child show only after an editor restart |
+| PIE instance thrown out of the viewport during work | `CompileWidgetBlueprint` of a live WBP while PIE runs — check `IsPIERunning` first |
+| Unlit widget materials blown out on a dark map | widget emissive is multiplied by scene exposure — run the colour through `EyeAdaptationInverse` |
+| World-space widget smeared over animated meshes | translucent quad without depth before TSR — `TranslucencyPass = MTP_AfterMotionBlur` |
 
 ## Finding the engine source
 
