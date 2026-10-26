@@ -32,7 +32,21 @@ call_tool  <your toolset>  RunConsole  {"Command": "Agent.SceneState all intro_l
 - Filter: `all` (default), `camera`, `characters`, `visible` (only characters rendered in the last 0.5 s).
 - In `-game` (no editor, no MCP): `-ExecCmds="Agent.SceneState all boot"` fires on frame 1 — too early; prefer
   `"-csvExecCmds=300:Agent.SceneState all at300,900:Agent.SceneState all at900"` with `-csvCaptureFrames=N
-  -ExitAfterCsvProfiling` (see `ue-performance`, measuring without a console).
+  -ExitAfterCsvProfiling` (see `ue-performance`, measuring without a console). Better still, give the probe its own
+  flags: start recording in `OnWorldBeginPlay` when `-AgentRun=<label>` is on the command line, and after
+  `-AgentRunSeconds=N` stop, write the summary and `FPlatformMisc::RequestExit(false)` — a check run that needs
+  nobody to close it, so an agent can launch several in parallel.
+- `-game` check runs, lessons from a real project:
+  - add `-unattended`: a missing map otherwise opens a modal dialog and the run silently falls back to the default map;
+  - from Git Bash, `/Game/...` arguments get rewritten to `C:/Program Files/Git/Game/...` — set `MSYS_NO_PATHCONV=1`,
+    and then pass the `.uproject` as a Windows path (`pwd -W`), since `/c/...` is no longer converted either;
+  - `-game` loads the last full build; Live Coding patches are not in it;
+  - budget: a 1280×720 `-game` run cost ~2–3 GB of VRAM on top of an idle editor (RTX 4090, mid-size scene); a PIE in
+    the editor costs more. Measure yours with `nvidia-smi` sampled while the run lives;
+  - in `-game`, `FScreenshotRequest` with UI shows the game window with its subtitles; in PIE, with UI it is the whole
+    editor window — take the game view only (`bShowUI = !GIsEditor`).
+- A second snapshot run often confirms a bug is real and not editor-only: if both PIE and `-game` show the frozen
+  clip, it is in the content.
 - Works in whoever's PIE is running — it is read-only and needs no editor lock (see [parallel-sessions.md](parallel-sessions.md)).
 
 ## What's in the JSON
