@@ -104,6 +104,19 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
   Exporting a full-size frame takes longer than a game frame, so even a focused editor gives a slideshow: set
   `GameplayStatics.set_global_time_dilation(world, 0.05)` for the capture (one exported frame ≈ 1/30 s of game time),
   record by game time, and put dilation back to 1 afterwards.
+- Copy the player's view into that capture from the **view target actor** (its location, rotation and the cine
+  camera's `get_horizontal_field_of_view()`), not from `PlayerCameraManager`. The camera manager reports the
+  previous frame's view, so around a `SetViewTarget` the recording shows a black or duplicated frame the player never sees.
+- A `CameraActor` with **Auto Activate for Player** in a streamed level takes the player's view the moment its level
+  becomes visible, in the middle of whatever your code shows. Clear it on load (`AutoActivateForPlayer` is protected:
+  `FindFProperty<FByteProperty>(ACameraActor::StaticClass(), "AutoActivateForPlayer")->SetPropertyValue_InContainer(Cam,
+  EAutoReceiveInput::Disabled)`) or re-assert the view target every tick while it matters.
+- `ULevelStreaming::SetShouldBeVisible(false)` takes several frames to remove a level. Two scenes sharing one origin
+  show through each other for those frames: hide the old one early and wait for `!IsLevelVisible()` before the switch.
+- When a launch hangs on the "Restore Packages" dialog (log frozen at frame 0, MCP calls time out),
+  `PostMessage(hwnd, WM_CLOSE)` to that window skips the restore and the load continues; `WM_KEYDOWN Escape` does nothing.
+  The packages it offered can be your own: toggling sublevel visibility for a capture (`set_level_visibility`) marks
+  those levels dirty, so check `Saved/Autosaves/PackageRestoreData.json` before you kill an editor.
 - Saving an asset while PIE runs reports success but writes nothing (`The Editor is currently in a play mode`) — save
   after `StopPIE` and check the file on disk.
 

@@ -74,6 +74,40 @@ vertical strips for the slab's sides (strips placed on an oval traced from the p
 - That descent is not an overview: "all scenes together in one picture" needs a different view (renders of each
   scene as flat cards composed into one image). Ask which one is meant before building.
 
+## An overview of all scenes (cards of their rest frames) with a seamless zoom into each
+
+Worked first time with the human once these were in place (UE 5.8.1, measured):
+
+- **Sketch first.** Cut each scene out (below), compose 2–3 layout variants as flat 2D images in Python, show them,
+  build only the chosen one. The human picked from the sketches at once.
+- **Capture each scene from its rest camera** with a `SceneCapture2D` copying the camera's lens and post:
+  - the **whole frame** with `SCS_FinalColorHDR` and the show flag `Tonemapper` off → scene-linear values (emissive
+    1.0 comes out 1.0). A card showing it through a camera with the same post is then tonemapped once, like the live
+    scene. Captured with the tonemapper on, it gets tonemapped twice and comes out washed out.
+  - the **cut-out** (the slab and what stands on it, no backdrop) twice, over an unlit black and an unlit white matte
+    plane far behind, bloom off: `alpha = 1 − (W − B)/(white − black)`, `colour = B / alpha`. This is exact for
+    half-transparent ghosts and smoke, which a chroma key is not.
+  - at the **screen's exact aspect** (16:9 → 2752×1548). At 2752×1536 the zoomed-in card leaves 4 px bars top and bottom.
+  - with **everything the live view has**, other levels' haze included. A part hidden for the capture shows as a
+    brightness jump at the seam.
+- **Layout:** the cards stand at different depths for parallax, all facing the overview camera exactly as each rest
+  camera faces its scene. The camera only translates. Zoom pose = card centre − forward · W / (2·tan(hfov/2)), where
+  W is the card's width. Pan first (across and down), dolly later.
+- **Closed or future scenes:** take one real slab's cut-out, desaturate it to luminance and multiply by the scene's
+  colour, then veil it in fog. A flat tint reads as a coloured smear, not a slab.
+- **The seam:**
+  - Put the scene's camera at its exact rest pose first (blend any menu offset or sway to zero).
+  - Do not hard-cut. Dissolve over ~0.5 s through a full-frame card placed in front of the live camera **at its focus
+    distance** with **depth test off**. Anything living in time (drifting ghosts, a turning funnel, particles) is at
+    another phase than in the capture.
+  - The card's actor must be **Movable**: a spawned StaticMeshActor is Static and ignores `SetActorLocation` in play.
+  - The full-frame texture needs **no mips**. Shown at ~0.7 of its size it samples mip 1 and softens the ink against
+    the live scene.
+  - Reveal the full frame (sky, backdrop) **from the middle out with soft edges** that shrink to none at full frame,
+    overlapped with the fade of the other cards. A hard rectangle reads as a framed picture; a fade before the reveal
+    leaves a dark gap.
+  - Measured across the camera switch in PIE: mean 0.3–0.6 of 255 per pixel; the static parts match at 1:1.
+
 ## Building more scenes of the same kind
 
 - Re-render art at a higher resolution with an image-edit endpoint ("re-render this exact image, move nothing")
