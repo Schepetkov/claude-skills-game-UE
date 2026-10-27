@@ -51,6 +51,17 @@ vertical strips for the slab's sides (strips placed on an oval traced from the p
   real particles around it.
 - A per-row profile (middle and half-width of the shape, baked from its alpha into a 1×N linear texture) lets the
   shader treat each row as the front of a cylinder without guessing the silhouette.
+- **A creature with moving parts (heads, tail, breathing belly)** — move the geometry, not the texture: put the card
+  on a subdivided grid mesh (64×64 is plenty; WPO on a 2-triangle quad can only shear the whole card) and in WPO
+  rotate each part rigidly about its pivot (neck root, tail root) with a weight `1 − smoothstep(0.6R, 1.3R, dist)`
+  from the part's centre; breathing = a small scale about the belly centre. Each vertex keeps its UV, so ink lines
+  stay crisp. Per part: centre, pivot, radius, angle, rate, phase — two summed sines with different rates read as
+  alive, one sine as a metronome. Eyes: a mask from saturated red pixels, pulsed emissive. Observed: UE 5.8.1.
+- **Puddles/water on a painted floor:** take the mask from the art itself (bluish, mid-value pixels inside the floor;
+  morphology open/close, keep components above an area threshold and with a compact fill ratio, drop those near the
+  floor edge — rim rocks and the front lip read as false puddles), project it like the floor. Rain ripples drawn
+  procedurally per cell **need a random on/off gate per cycle** (`hash(cell, cycle) < density`): with every cell
+  firing, the rings form a static honeycomb that reads as a pattern, not rain.
 
 ## Building more scenes of the same kind
 
@@ -71,6 +82,12 @@ vertical strips for the slab's sides (strips placed on an oval traced from the p
   in the miniature's units (millimetres to ~2 cm at a 5 m focus), curl noise, `MinCameraDistance` 0.
 - `ParticleColor`'s main output is **float3** — take alpha from its `A` pin, or the shader fails and the sprite
   silently falls back to the default lit material (black squares in an unlit scene).
+- **Rain/hail over a painted storm:** weather packs that kill drops on collision (scene depth or ray-traced
+  collision, splash on hit, user parameters for area) do nothing useful over unlit cards — build a plain system:
+  spawn box over the scene, lifetime ≈ fall height / speed, velocity-aligned thin streaks for rain, small unaligned
+  dots with curl noise for hail, a separate tiny short-lived burst on the floor for splashes. If the background art
+  already has painted rain, live streaks must be **brighter than the sky** behind them; on a still they still read
+  weakly — judge rain in motion (a preview video), not in a single frame.
 - Particles do **not** simulate in the editor world (game time stays 0): judge them only in PIE (see `ue-mcp`
   field notes for capturing a PIE preview).
 
