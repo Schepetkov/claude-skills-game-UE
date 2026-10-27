@@ -58,6 +58,9 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
   Script names in stack refs are `ENiagaraScriptUsage` values: `ParticleSpawnScript`, `ParticleUpdateScript`,
   `EmitterUpdateScript`; a dynamic input's child is `inputNameStack: ["Sprite Size", "Value", "Minimum"]`.
   `GetDynamicInputChain` shows the real numbers hidden behind RandomRange / Multiply inputs.
+  **The copy keeps every module of the template**, including tints: a template's update `Color` module with a
+  `Scale Color` multiplier turned new white rain orange. After copying, walk the update script's inputs
+  (`Scale Color` → 1,1,1, the `Color` input itself) — not only the spawn values you meant to change.
 - A GPU emitter with `CalculateBoundsMode: Dynamic` has no real bounds; for a small ambient effect set `CPUSim` +
   `Fixed` bounds. Renderer `MinCameraDistance` (often 300 in templates) culls everything closer than 3 m.
 - **Niagara does not simulate in the editor world** (game time stays 0, a capture there shows nothing or frozen spawn
@@ -71,6 +74,8 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
 - `Start-Process UnrealEditor.exe` opens the window minimized or larger than the work area: `ShowWindow(h, 3)` (maximize)
   and compare `GetWindowRect` with the screen. Before any Slate screenshot check `IsIconic` — a capture of a minimized
   window returned an empty PNG, the second one crashed the render thread (`RHIReadSurfaceData`).
+  A **minimized editor also freezes PIE time**: `get_game_time_in_seconds` stays 0 and nothing animates, while MCP
+  calls keep working. Restore it (`ShowWindow(h, 9)`) before any PIE check — "particles/animation broken" may be this.
 - Looking at the editor from outside: capture **the editor's own windows** (`PrintWindow` per window handle of the
   editor process), never the whole desktop — the desktop shows whatever else the human has open.
 - `CaptureViewport` always renders the **editor** world (no PIE actors, no Niagara). `CaptureEditorImage` caps at 1280 px.
@@ -96,6 +101,9 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
   `get_all_actors_with_tag`. Drive it from a `register_slate_post_tick_callback`, timestamp frames with the game
   time and resample to a fixed fps. A background (unfocused) editor throttles PIE to ~3 fps;
   `bThrottleCPUWhenNotForeground` is not reachable from Python — expect choppy previews or ask for focus.
+  Exporting a full-size frame takes longer than a game frame, so even a focused editor gives a slideshow: set
+  `GameplayStatics.set_global_time_dilation(world, 0.05)` for the capture (one exported frame ≈ 1/30 s of game time),
+  record by game time, and put dilation back to 1 afterwards.
 - Saving an asset while PIE runs reports success but writes nothing (`The Editor is currently in a play mode`) — save
   after `StopPIE` and check the file on disk.
 
@@ -106,6 +114,10 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
   call `unreal.SystemLibrary.execute_console_command(world, cmd, pc)` from Python.
 - `slomo` through such a tool is unknown in PIE; use `GameplayStatics.set_global_time_dilation` from Python.
 - Debug cvars live across PIE sessions until the editor closes — reset them in the same command.
+- Importing a generated grid mesh (OBJ) from Python: the importer mirrors one horizontal axis and flips V, and Nanite
+  is on by default — a flat 65×65-vertex grid came back with 282 vertices, so WPO had nothing to bend. Write the OBJ
+  pre-compensated (check one corner vertex's position and UV after import) and turn Nanite off with
+  `StaticMeshEditorSubsystem.set_nanite_settings(mesh, settings, True)`; `StaticMesh.build()` does not exist.
 - Python gotchas: `duplicate_asset` a map + `load_level` = fatal "World Memory Leaks" (use
   `LevelEditorSubsystem.new_level_from_template`); `unreal.Rotator(a,b,c)` is (roll, pitch, yaw); positional
   `unreal.Color(...)` is not RGB — use keywords; unary minus on `unreal.Vector` mutates in place; `set_editor_property(None)`
