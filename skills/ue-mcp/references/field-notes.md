@@ -50,6 +50,17 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
 - The Cascade converter can leave every emitter disabled (`bIsEnabled: false`) — check `GetEmitterSummary` right away.
 - `AssetTools.get_dependencies` takes `asset_path` (with `path` the output is empty and looks "clean").
 - A component that cached the system by id keeps playing the old one after you swap it in data — restart PIE.
+- New system from an existing one: `CreateNiagaraSystem {templateSystem}` copies it (the original stays untouched).
+  Script names in stack refs are `ENiagaraScriptUsage` values: `ParticleSpawnScript`, `ParticleUpdateScript`,
+  `EmitterUpdateScript`; a dynamic input's child is `inputNameStack: ["Sprite Size", "Value", "Minimum"]`.
+  `GetDynamicInputChain` shows the real numbers hidden behind RandomRange / Multiply inputs.
+- A GPU emitter with `CalculateBoundsMode: Dynamic` has no real bounds; for a small ambient effect set `CPUSim` +
+  `Fixed` bounds. Renderer `MinCameraDistance` (often 300 in templates) culls everything closer than 3 m.
+- **Niagara does not simulate in the editor world** (game time stays 0, a capture there shows nothing or frozen spawn
+  positions). Judge particles only in PIE.
+- Material for Niagara sprites: `ParticleColor`'s main output is float3 — alpha comes from its `A` pin. `PC.a` in a
+  Custom node fails to compile and the renderer silently uses the default lit material (black squares in an unlit
+  scene). After a material edit grep the log for `Failed to compile Material`.
 
 ## Editor process and capture
 
@@ -71,7 +82,16 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
 - **Live Coding:** touching any `.h` (UCLASS or not) → full build with the editor closed. Live Coding patches every source
   newer than the DLL, including other sessions' headers; it keeps function-local statics of the old module; static
   `FAutoConsoleCommand`s in a patched `.cpp` can re-register onto the wrong lambdas. Patches do not survive a restart.
-- After an editor restart Claude Code's MCP client stays "session expired" until `/mcp` → Reconnect; a raw client works.
+- After an editor restart Claude Code's MCP client stays "session expired" until `/mcp` → Reconnect. A raw JSON-RPC
+  client technically works, but it bypasses the editor-lock hooks (they watch MCP tool calls) and the harness may
+  deny it as a bypass — ask the human for `/mcp` instead of working around it.
+- **Preview video of a game world (PIE):** put a dormant `SceneCapture2D` (tagged) into the level beforehand — Python
+  cannot spawn into the PIE world (`GameplayStatics` has no deferred spawn there), but finds the PIE copy with
+  `get_all_actors_with_tag`. Drive it from a `register_slate_post_tick_callback`, timestamp frames with the game
+  time and resample to a fixed fps. A background (unfocused) editor throttles PIE to ~3 fps;
+  `bThrottleCPUWhenNotForeground` is not reachable from Python — expect choppy previews or ask for focus.
+- Saving an asset while PIE runs reports success but writes nothing (`The Editor is currently in a play mode`) — save
+  after `StopPIE` and check the file on disk.
 
 ## Console and Python
 
