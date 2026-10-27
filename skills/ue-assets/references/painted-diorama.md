@@ -145,3 +145,40 @@ Worked first time with the human once these were in place (UE 5.8.1, measured):
    animated) before the human does — thumbnails hid both the end shear and the smeared line art.
 4. Particle density: compare against the art at that size; the first tune was invisible (a tiny puff at the base),
    the second a blizzard over the drawing — aim for sparse specks that never cover the painted subject.
+
+## Painted cards around a 3D play area with a free camera (props, backdrop, sky — laid out per seed)
+
+A diorama is one camera's picture. When the camera orbits freely (a tactics board, 360°, pitch −6…−66°), each painted
+prop must hold up from every side on its own. Learned in six review rounds on UE 5.8; every row is a defect the human
+caught.
+
+| Wrong | What the human saw | Right |
+|---|---|---|
+| Lying pieces (fallen drum, slab, capital) stood up as camera-facing cards | "floating", "at an odd angle" | never a standing card: a flat decal drawn top-down, or leave it out |
+| Cards leant back with the view's pitch (to not go edge-on from above) | columns and walls falling over | upright only, turn about the vertical; a steep view simply sees less |
+| Wide or directed pieces (wall, arch, portico, statue) turning to the camera | cardboard; corners give it away | draw them as a **frontal elevation**, keep them still facing the play area's centre, and only beyond the camera's reach (pivot bound + arm): then the back is never seen |
+| Props drawn from ~25° above | top faces visible from a low camera, bases read wrong | standing props drawn side-on at eye level with a flat bottom edge; low props from 30 cm |
+| Random mirroring of instances | painted light flips between neighbours | off |
+| Density-noise scatter (PCG rings) | ~700 cards "from nowhere", identical pieces side by side, walls by the board | a composed layout: rings (empty → low pieces → clusters of anchor + satellites + low → a continuous back wall of buildings and silhouettes → backdrop), footprints that never overlap, the same picture kept apart |
+| Then the composer's minimum (35–60 cards) | "too empty" ×3: gaps between the mid ring and the back line, a flat plain before the backdrop | the human wanted ~350: clusters out to the back line, a group every ~10° in the back wall, no deliberately empty sector. **Look for gaps from a low camera in all directions**; from above they do not show |
+| A mirrored panorama round the backdrop cylinder | a kaleidoscope (one temple twice, face to face) | crossfade the panorama's last ~20 % into its start and repeat it plainly |
+| Full height fog over the painted props, an unfogged painted backdrop behind | mid-ground props pale as ghosts in front of a dark backdrop — air perspective reversed | thin the fog, tint it the backdrop's mist, cap `fog_max_opacity` (~0.35) |
+| A lit ground plane running up to the backdrop | the plain ends against the picture with a seam | blend the ground into the backdrop's own bottom-mist colour as **emissive** past ~2/3 of the radius |
+| A cloud band with hard top/bottom edges | a ceiling | fade the band's alpha to both edges; speed ≥ ~0.25°/s (0.08°/s reads as still) |
+| Ground tiles the size of a play cell, full contrast | the board's cells disappear | stones a third of a cell, ink pulled halfway to a mean grey near the board |
+| A dark flat decal (ash patch) | reads as a hole | light decals only (cracks, bones, broken tiles) |
+
+Mechanics that worked:
+
+- Card = static mesh, two sections: the quad (local XZ, pivot at the foot) and a ground contact blob (modulate).
+  Material WPO turns the quad about the vertical through `ObjectPositionWS` (per instance in the vertex shader) using
+  the pre-skinned local position, so the instance's yaw is irrelevant. A `Billboard` scalar switches it off for still
+  pieces. Dither it out near the camera and partly when it stands between the camera and the play area's centre.
+- Cards cast no shadow (a billboard's shadow turns with the camera) — the blob gives contact.
+- Flying souls: translucent card, WPO drift on two summed sines per axis with a per-instance phase, opacity breathing.
+- The width of a card for spacing: `GetBoundingBox()` is the **extended** box — subtract the bounds extension you gave
+  it for the turn, or tall cards reject every neighbour.
+- Sheets where pieces stand on one drawn ground line: open the mask with a tall vertical element before labelling,
+  or the line glues neighbours into one piece.
+- Translucent backdrop/cloud cylinders centred on the origin sort ambiguously against translucent props: give them
+  negative translucency sort priority.
