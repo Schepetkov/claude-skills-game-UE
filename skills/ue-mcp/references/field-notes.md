@@ -114,6 +114,10 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
   call `unreal.SystemLibrary.execute_console_command(world, cmd, pc)` from Python.
 - `slomo` through such a tool is unknown in PIE; use `GameplayStatics.set_global_time_dilation` from Python.
 - Debug cvars live across PIE sessions until the editor closes — reset them in the same command.
+- Level streaming from Python in PIE: `LevelStreaming` has no `set_should_be_visible`; `set_editor_property("should_be_visible", …)`
+  is accepted but the world never re-evaluates the level; `LatentActionInfo` cannot be built (its fields are protected),
+  so `load_stream_level` / `unload_stream_level` are unusable. For a preview, hide the level's actors
+  (`set_actor_hidden_in_game`); for the real thing, C++ `SetShouldBeVisible`.
 - Importing a generated grid mesh (OBJ) from Python: the importer mirrors one horizontal axis and flips V, and Nanite
   is on by default — a flat 65×65-vertex grid came back with 282 vertices, so WPO had nothing to bend. Write the OBJ
   pre-compensated (check one corner vertex's position and UV after import) and turn Nanite off with

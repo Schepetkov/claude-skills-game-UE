@@ -63,6 +63,17 @@ vertical strips for the slab's sides (strips placed on an oval traced from the p
   procedurally per cell **need a random on/off gate per cycle** (`hash(cell, cycle) < density`): with every cell
   firing, the rings form a static honeycomb that reads as a pattern, not rain.
 
+## Several scenes in one map
+
+- A scene whose floor/ring is **projected from a rest camera at the origin cannot be moved**: streamed as a sublevel
+  with an offset transform, the projected parts vanish (props hang in the air). Stream every scene at the origin, keep
+  one visible (`ULevelStreaming::SetShouldBeVisible` from C++; wait for `IsLevelVisible()`), and travel between them
+  by taking the camera into thick cloud cards above/below the rest frame, swapping under the thickest cloud and coming
+  out at the next scene from the other side — reads as one continuous descent. Keep the clouds out of the rest frame
+  (start them beyond ±tan(vfov/2)·depth) or they haze every scene's sky. Observed: UE 5.8.1.
+- That descent is not an overview: "all scenes together in one picture" needs a different view (renders of each
+  scene as flat cards composed into one image). Ask which one is meant before building.
+
 ## Building more scenes of the same kind
 
 - Re-render art at a higher resolution with an image-edit endpoint ("re-render this exact image, move nothing")

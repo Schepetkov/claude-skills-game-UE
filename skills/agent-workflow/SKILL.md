@@ -34,7 +34,7 @@ accepts the work (or abandons it), not later.
 
 | Cause class | Typical fix |
 |---|---|
-| Didn't check the result myself (no screenshot, no test, no scene state) | a tool or a verification step in the skill |
+| Didn't check the result myself (no screenshot, no test, no scene state) | a tool or a verification step in the skill. Check through **the same entry point the human will use** (press Play on that map, run the shipped command) — a capture script that sets the scene up itself proves the script, not the deliverable |
 | Missing knowledge (engine API, project convention) | a row in the skill's table / a reference file |
 | Misread the request (taste, intent) | ask earlier: show a sketch or 2–3 options before building |
 | Tool got in the way (crash, lock, slow build) | a hook, a script, a field note |
