@@ -1,7 +1,7 @@
 # Painted 2.5D diorama (one illustration → a scene a camera can move in)
 
 A menu backdrop or a level-select map built from flat painted layers (AI-generated or hand-painted), with real depth
-of field, particles and a camera that sways and dives in. Learned on a UE 5.8 project, six review rounds; every row
+of field, particles and a camera that sways and dives in. Learned on a UE 5.8 project, ten review rounds; every row
 below is a defect a human actually caught.
 
 ## The core rule: everything that touches the ground stands on a real ground
@@ -26,7 +26,8 @@ vertical strips for the slab's sides (strips placed on an oval traced from the p
 | A flat card for the side rock clusters at one depth | it slides off the ring off-axis: vertical cuts, a rock hanging apart from the island | put the ring on the oval through the **outer silhouette** (side rocks included) instead of separate cards |
 | Ring on a larger oval than the floor | a thin gap at the front edge, background glow shines through | extend the floor texture to the ring's oval on the front half |
 | Floor mask from a brightness threshold | shaded parts of the floor fall out, stepped edges | close + fill the contour, unite with a fitted ellipse, blur the mask edge (no stair steps) |
-| Walls nearly parallel to the rays (oval's far left/right) | at 20–30° off-axis the projection smears into black bands | this is the method's limit — state the camera range (e.g. sway ≤ 8°, the dive path) and check exactly that range; free orbit needs real 3D rocks |
+| Walls nearly parallel to the rays (oval's far left/right) | the ends shear and "slide" with **any** camera offset (stretch ∝ 1/cos of the wall's angle to the ray) — shrinking the sway only shrinks it | drop the strips within ~15° of each end and stand a **flat card facing the camera** at the end's depth there (front and back halves of the texture as two cards on one plane), overlapping the neighbouring strips by another ~20° so no slit opens. Plus a modest sway (≈15 cm at a 5 m focus) |
+| An AI-generated 3D mesh of the slab (image-to-3D) fitted to the painted silhouette and camera-mapped | holes where its top was carved away to keep the props' floor flat, smeared texture on every surface the rest camera does not see — the human called it worse than the strips | do not camera-map a generated mesh onto the painting; keep the flat proxies + end cards. A real 3D slab needs its own texture, i.e. a different art pipeline |
 
 ## Rendering
 
@@ -40,6 +41,28 @@ vertical strips for the slab's sides (strips placed on an oval traced from the p
 - A camera looking along +Y has screen-right = **world −X**: everything placed from screen coordinates comes out
   mirrored unless you negate X. Self-consistent if every layer uses the same mapping; just remember it when placing
   background cards by screen position.
+
+## Animating painted (ink line) art
+
+- **Never move the pixels of line art.** A shader that resamples the sprite (e.g. a funnel "rotating" by warping UVs
+  around a cylinder) smears thin ink lines into horizontal streaks — invisible in thumbnails, obvious at screen size.
+- What reads as motion and keeps the drawing crisp: light/shade bands running across the shape (a function of the
+  cylinder angle and time, multiplying the colour), WPO sway of the card (top more than base), flicker/flashes, and
+  real particles around it.
+- A per-row profile (middle and half-width of the shape, baked from its alpha into a 1×N linear texture) lets the
+  shader treat each row as the front of a cylinder without guessing the silhouette.
+
+## Building more scenes of the same kind
+
+- Re-render art at a higher resolution with an image-edit endpoint ("re-render this exact image, move nothing")
+  at the model's native size: geometry stays pixel-exact (IoU ≈ 0.99), so every hand-tuned mask and spot carries
+  over ×2. Tile-upscaled sizes (4K on some models) bring seams and mushy patches.
+- Pale opaque subjects on a "transparent" background mode come back half-transparent — generate on a flat chroma
+  green and key it yourself.
+- The next variant (another level/circle) = an image edit of the base asset ("same shape, other theme"): same
+  silhouette → the whole layout (floor, ring masks, end cards) is reused; only content and props are new.
+- Shared parent materials across scenes: a rebuild script must not delete and recreate them — every other scene's
+  instances lose their parent. Build them once; rebuild only on purpose, then rebuild all scenes.
 
 ## Particles in such a scene
 
@@ -56,4 +79,7 @@ vertical strips for the slab's sides (strips placed on an oval traced from the p
 1. Shots from the **rest camera and from the edges of the allowed camera range** (sway extremes, higher, the dive
    path) — never only the rest frame. Most "floating" and "cut" defects are invisible from the rest pose.
 2. Particles and anything time-driven: in a game world (PIE), not the editor world.
-3. Look at the shots yourself at full size (crops of the bases, the floor edge, the side rocks) before the human does.
+3. Look at the shots yourself **at the human's screen size, crops 1:1** (bases, floor edge, side rocks, anything
+   animated) before the human does — thumbnails hid both the end shear and the smeared line art.
+4. Particle density: compare against the art at that size; the first tune was invisible (a tiny puff at the base),
+   the second a blizzard over the drawing — aim for sparse specks that never cover the painted subject.

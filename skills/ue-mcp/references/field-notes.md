@@ -26,6 +26,10 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
   dirty — including a dirty map (check `git status` after).
 - **Git LFS `lockable` files are read-only after commit**: `save_assets` silently "succeeds" and writes nothing.
   `git lfs lock` (or `chmod u+w`) first, then verify the bytes on disk (timestamp, a string you wrote).
+  `EditorLoadingAndSavingUtils.save_map` on such a map instead opens a modal "Unable to save package … read-only":
+  the game thread blocks, every MCP call times out, and a script that deletes/recreates assets fails half-way
+  (`create_asset` returns None). Before a rebuild script, lock every file it rewrites (`git lfs lock` per file), and
+  check for a modal by listing the editor process's visible windows (title "Message").
 - In a shared editor, save right after a recompile — a peer closing the editor takes in-memory edits with it.
 - `AssetTools.delete` on a loaded asset drops it from the registry but the file stays locked on disk until the editor exits.
 - `TextureTools.import_file` onto an existing name answers "already exists" but **does** reimport the file; the live
@@ -67,6 +71,8 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
 - `Start-Process UnrealEditor.exe` opens the window minimized or larger than the work area: `ShowWindow(h, 3)` (maximize)
   and compare `GetWindowRect` with the screen. Before any Slate screenshot check `IsIconic` — a capture of a minimized
   window returned an empty PNG, the second one crashed the render thread (`RHIReadSurfaceData`).
+- Looking at the editor from outside: capture **the editor's own windows** (`PrintWindow` per window handle of the
+  editor process), never the whole desktop — the desktop shows whatever else the human has open.
 - `CaptureViewport` always renders the **editor** world (no PIE actors, no Niagara). `CaptureEditorImage` caps at 1280 px.
   Full resolution: `SlateInspectorToolset.Screenshot {ref:""}` (or `Observe` + `{ref:"w1"}`); the base64 is inside
   `result.content[].text` as escaped JSON. A Message Log tab or Content Drawer over the viewport ends up in the frame —

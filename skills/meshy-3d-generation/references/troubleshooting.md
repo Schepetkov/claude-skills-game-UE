@@ -28,3 +28,10 @@ When `poll` exits with `TASK_FAILED: <message>`:
 - `ERROR: MESHY_API_KEY not set` → run `check-env`; if `READY: NO_KEY_FOUND`, follow [setup.md](setup.md).
 - `PYTHON_REQUESTS: MISSING` → `pip install requests`.
 - Key works in the user's terminal but not here → the key may live in a shell profile the agent session didn't source; see the extended diagnostics in [setup.md](setup.md).
+
+## Windows shells
+
+- **Git Bash rewrites the endpoint argument** (`--endpoint /openapi/v1/image-to-3d` becomes
+  `C:/Program Files/Git/openapi/...` and the request goes to a broken host): run with `MSYS_NO_PATHCONV=1`.
+- **`poll` crashes with `UnicodeEncodeError: 'charmap'`** on a cp1252 console (the progress bar characters): set
+  `PYTHONIOENCODING=utf-8`. The task itself keeps running — poll again.
