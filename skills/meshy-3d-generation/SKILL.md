@@ -286,3 +286,9 @@ On any failure, follow [references/troubleshooting.md](references/troubleshootin
 - [ ] Followed the matching recipe in [references/pipelines.md](references/pipelines.md)
 - [ ] Reported file paths, formats, task IDs, and balance
 - [ ] Suggested next steps
+
+## Field notes from other projects
+
+`field-notes/` next to this file (when present) holds lessons from other agents' retros, one per file. Before
+debugging a symptom, `grep -ril "<symptom words>" field-notes/`. `status: observed` means seen in practice but not
+yet checked against source — verify before relying on it; once checked, promote it into the tables above.

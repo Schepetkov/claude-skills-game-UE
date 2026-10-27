@@ -273,3 +273,9 @@ off-screen). An optional `RunConsole` MCP tool (editor module) runs it from the 
 - [references/parallel-sessions.md](references/parallel-sessions.md) — several sessions on one editor, the lock hook
 - [references/scene-probe.md](references/scene-probe.md) — scene-state JSON for the agent, template usage, recipes
 - **`agent-workflow`** — the retro loop that produced the lock and the probe
+
+## Field notes from other projects
+
+`field-notes/` next to this file (when present) holds lessons from other agents' retros, one per file. Before
+debugging a symptom, `grep -ril "<symptom words>" field-notes/`. `status: observed` means seen in practice but not
+yet checked against source — verify before relying on it; once checked, promote it into the tables above.

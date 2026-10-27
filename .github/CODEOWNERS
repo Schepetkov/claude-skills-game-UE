@@ -1,0 +1,10 @@
+# Every change is read by a maintainer before it reaches everyone's agents.
+*                 @Schepetkov
+
+# Code that runs on users' machines: read line by line.
+/install.*        @Schepetkov
+/tools/           @Schepetkov
+/.github/         @Schepetkov
+/skills/*/hooks/     @Schepetkov
+/skills/*/scripts/   @Schepetkov
+/skills/*/templates/ @Schepetkov

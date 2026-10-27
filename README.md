@@ -7,6 +7,8 @@ Ten skills: eight covering networking, lighting, assets, performance, UI, cinema
 
 And tooling for running several agent sessions on one live editor: an editor-lock hook so they don't stop each other's PIE or crash each other with Live Coding, and a scene probe that lets the agent read what is on screen instead of asking you to look.
 
+**And it grows from everyone's agents.** Type `/retro` when your agent finishes a task: it names what cost rounds of corrections, writes the lesson so it holds outside your project, and opens a pull request here. After review it lands in `main`, and every agent with these skills installed picks it up at its next session start. [How it works ↓](#grow-it-together-retro--pull-request)
+
 [Русская версия](README.ru.md)
 
 ---
@@ -39,7 +41,7 @@ The rest is what the docs don't put in one place: decision trees, cost orderings
 | **`ue-mcp`** | UE 5.8's built-in **Unreal MCP** server — setup, the 26 toolsets (and which 5 `AllToolsets` silently skips), tool search, custom tools in C++/Python, safety, field notes. **Parallel sessions** on one editor with an opt-in lock hook; a **scene probe** C++ template (scene state as JSON) and a `RunConsole` tool | Connecting an agent to a live editor. Writing project-specific MCP tools. Several sessions on one editor. Letting the agent check a scene itself |
 | **`meshy-3d-generation`** | [Meshy AI](https://meshy.ai) API — text/image→3D, texturing, rigging, animation | Generating 3D assets. Pairs with `ue-assets` for the cleanup pass before import |
 | **`agent-workflow`** | Engine-agnostic working discipline: a retro after every significant task whose output is a change (skill, rule, hook, tool), a sqlite task journal with rounds-per-area stats, auto-memory hygiene, speaking up, review by a second model, measured skill optimization | A task took several rounds of corrections. Memory feels stale. Before committing to a spec. "Why does this keep happening?" |
-| **`retro`** | The `/retro` command: closes a session or an accepted task — rounds and causes, a change per cause, what worked written down, stale memory cleaned, shared-skill lessons committed, a journal entry, a few-line report | End of a session. A task was accepted or abandoned. Typed by the human, never auto-loaded |
+| **`retro`** | The `/retro` command: closes a session or an accepted task — rounds and causes, a change per cause, what worked written down, stale memory cleaned, lessons for everyone sent here as a pull request, a journal entry, a few-line report | End of a session. A task was accepted or abandoned. Typed by the human, never auto-loaded |
 
 `ue-mcp` is the one that changes the others: with the editor connected, the agent can inspect the live Slate tree, read actor properties, and run automation tests instead of inferring from `.uasset` files it cannot read.
 
@@ -111,6 +113,23 @@ cp -r /path/to/claude-skills-game-UE/skills/ue-lighting .claude/skills/
 
 Verify with `/skills` in Claude Code — the installed skills should be listed.
 
+### Recommended — pull new lessons at every session start
+
+Other people's agents keep adding lessons. This hook runs `git pull` in your clone when a Claude Code session starts, tells the agent which lessons are new, and names any changed file that runs code so the agent shows it to you first. Add to `~/.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command",
+        "command": "python \"$HOME/.claude/skills/agent-workflow/hooks/session-start-skills.py\"" } ] }
+    ]
+  }
+}
+```
+
+If your clone is not at `~/Documents/GitHub/claude-skills-game-UE`, set `SKILLS_REPO` to its path. Without the hook, run `git pull` in the clone now and then.
+
 ### Optional — the editor-lock hook (per project)
 
 Skills install themselves; hooks don't. If more than one agent session (or you and an agent) will use one editor, opt in per project:
@@ -148,6 +167,40 @@ Typical prompts that trigger them:
 
 ---
 
+## Grow it together: retro → pull request
+
+Every team that works with an agent on Unreal hits the same walls: a save that silently writes nothing, a cvar renamed between versions, a tool that freezes the editor. Each team's agent learns it once. Here it is learned once for everyone.
+
+```
+you finish a task ─▶ /retro ─▶ agent writes the lesson without your project in it
+                              ─▶ branch + python tools/check_skills.py ─▶ pull request
+                              ─▶ CI + maintainer review ─▶ main
+                              ─▶ every installed agent pulls it at session start
+```
+
+**To join:**
+
+1. Install the skills (above) and the session-start hook.
+2. Fork this repo on GitHub, then in your clone: `git remote add fork https://github.com/<you>/claude-skills-game-UE.git`. With the [GitHub CLI](https://cli.github.com) (`gh`) logged in, the agent can do this step and open the PRs itself.
+3. Work as usual. When a task is done, especially one that took several rounds, type `/retro`.
+
+**What the agent sends:**
+
+- **Field notes** — something seen in practice and not checked against the engine source yet: `skills/<skill>/field-notes/YYYY-MM-DD-slug.md`, one lesson per file, marked `status: observed`. Agents read them when they hit the same symptom.
+- **Verified rows** — a claim with a source (engine path, Epic doc URL, measurement) goes straight into the skill's tables.
+- **Working practices** that hold on any project go into `agent-workflow`.
+
+**What keeps it trustworthy.** Whatever lands in `main` becomes instructions for every installed agent, so:
+
+- `main` is protected: a pull request, a green `check` job and a maintainer's approval are required.
+- `tools/check_skills.py` (run by CI and by the agent before a PR) rejects personal paths, keys and tokens, `.env` files, broken frontmatter, and field notes without a version and a date.
+- Code that runs on your machine (`hooks/`, `scripts/`, `templates/`, `install.*`) is read line by line, and the session-start hook names it whenever an update changes it.
+- Maintainers periodically fold verified notes into the skill tables and delete the ones that turned out wrong.
+
+Rules and formats: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
 ## What these skills will and won't do
 
 **Will:**
@@ -177,7 +230,7 @@ If you're on a different version, the skills still work: the methodology, decisi
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: every factual claim needs a source — an engine-source path, an Epic doc URL, or a measurement. "I think it's called that" is not a source, and is exactly the failure mode this repo exists to fix.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Short version: every factual claim needs a source — an engine-source path, an Epic doc URL, or a measurement. "I think it's called that" is not a source, and is exactly the failure mode this repo exists to fix. A lesson without a source yet is welcome as a field note marked `observed`. The easiest way to contribute is `/retro` at the end of a task: your agent opens the PR.
 
 ## Licence
 

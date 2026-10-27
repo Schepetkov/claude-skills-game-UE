@@ -181,3 +181,9 @@ With only a Launcher install, confirm cvar names at runtime instead: the console
 
 - [references/iris.md](references/iris.md) — Iris enable steps verified against 5.8.1 source, filtering/prioritization, what breaks
 - [references/replication-cookbook.md](references/replication-cookbook.md) — copy-paste patterns: conditions, fast arrays, dormancy, RPC validation
+
+## Field notes from other projects
+
+`field-notes/` next to this file (when present) holds lessons from other agents' retros, one per file. Before
+debugging a symptom, `grep -ril "<symptom words>" field-notes/`. `status: observed` means seen in practice but not
+yet checked against source — verify before relying on it; once checked, promote it into the tables above.

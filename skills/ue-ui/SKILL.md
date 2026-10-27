@@ -203,3 +203,9 @@ With only a Launcher install, confirm cvar names at runtime: the console autocom
 
 - **`ue-performance`** — frame budget and how UI cost shows up in `stat unit`
 - [references/umg-optimization.md](references/umg-optimization.md) — the full optimization checklist with cvars
+
+## Field notes from other projects
+
+`field-notes/` next to this file (when present) holds lessons from other agents' retros, one per file. Before
+debugging a symptom, `grep -ril "<symptom words>" field-notes/`. `status: observed` means seen in practice but not
+yet checked against source — verify before relying on it; once checked, promote it into the tables above.

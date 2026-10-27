@@ -150,3 +150,9 @@ With only a Launcher install, confirm cvar names at runtime: the console autocom
 ## Related
 
 - [references/nanite.md](references/nanite.md) — Nanite settings, cvars, visualization modes, and the fallback/RT interaction in detail
+
+## Field notes from other projects
+
+`field-notes/` next to this file (when present) holds lessons from other agents' retros, one per file. Before
+debugging a symptom, `grep -ril "<symptom words>" field-notes/`. `status: observed` means seen in practice but not
+yet checked against source — verify before relying on it; once checked, promote it into the tables above.

@@ -217,3 +217,9 @@ are evaluated per client and do not replicate. Detail: engine-api.md §2.
 - **`ue-lighting`** — per-shot cheat lights, exposure lock, Lumen in close-ups.
 - **`ue-performance`** — cinematic scalability and shot cost; measure, don't guess.
 - **`ue-assets`** — retargeting pack animation, skeleton compatibility.
+
+## Field notes from other projects
+
+`field-notes/` next to this file (when present) holds lessons from other agents' retros, one per file. Before
+debugging a symptom, `grep -ril "<symptom words>" field-notes/`. `status: observed` means seen in practice but not
+yet checked against source — verify before relying on it; once checked, promote it into the tables above.

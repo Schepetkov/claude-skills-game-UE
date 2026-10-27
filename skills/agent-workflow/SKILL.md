@@ -44,7 +44,8 @@ accepts the work (or abandons it), not later.
    way as a mistake — otherwise the next session rediscovers it by luck.
 4. **Make the change now** — edit the skill, add the rule, write the hook, or file the tool task. A lesson that
    applies beyond this project goes into a **shared skill** — written so a stranger can use it (no project names,
-   personal paths, ids), with its source — and is **committed and pushed** in the skills repo right away; a
+   personal paths, ids), with its source — and is **sent to the skills repo right away** (pushed by a maintainer,
+   a pull request from everyone else; unverified lessons as field notes — the `retro` skill has the steps); a
    project-only one goes into the project's CLAUDE.md or skill.
 5. **Record it** in the journal (below). `changes` empty with rounds > 0 = the retro is not done.
 6. Tell the human in **a few lines**: rounds, main cause, what changed, what was kept. Not a report.
