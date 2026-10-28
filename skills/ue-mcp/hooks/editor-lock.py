@@ -20,6 +20,8 @@ Where the lock lives (first that applies):
   otherwise             the first *.uproject found under $CLAUDE_PROJECT_DIR (or cwd), up to 2 levels deep
                         -> <its dir>/Saved/AgentLock.json; no .uproject -> $CLAUDE_PROJECT_DIR/.claude/editor-lock.json
 UE_MCP_TOOL_PREFIX      tool-name prefix of the Unreal MCP server (default mcp__unreal__ - the server key in .mcp.json)
+UE_EDITOR_DENY          comma-separated operations (names in OPS below) denied outright for every session, e.g.
+                        live-coding in a project where a patch re-runs other files' static initializers (unity build)
 
 Python 3 standard library only. Edit OPS below to match your project's tool names.
 """
@@ -31,6 +33,10 @@ import sys
 import time
 
 MCP_PREFIX = os.environ.get("UE_MCP_TOOL_PREFIX", "mcp__unreal__")
+DENIED = {s.strip() for s in os.environ.get("UE_EDITOR_DENY", "").split(",") if s.strip()}
+DENY_WHY = {"live-coding": "Live Coding is off in this project: with a unity build a patch recompiles the whole unity "
+                           "blob and re-runs other files' static initializers (console variables registered twice -> "
+                           "a null dereference on the next PIE). Close the editor and run Build.bat instead."}
 SHELL_TOOLS = ("Bash", "PowerShell")
 
 # (operation, regex over the tool input, lock seconds, holds after the call, the held operation it ends)
@@ -138,6 +144,10 @@ def pre(event):
     if not op:
         return
     name, _, ttl, keep, _ = op
+    if name in DENIED:
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "deny",
+                                                 "permissionDecisionReason": DENY_WHY.get(name, f"{name} is disabled (UE_EDITOR_DENY)")}}))
+        return
     session = event.get("session_id", "?")
     path = lock_path()
     lock = read_lock(path)

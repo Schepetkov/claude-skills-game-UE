@@ -66,6 +66,8 @@ PostToolUseFailure), `status`, `release`.
 Lock file: `UE_EDITOR_LOCK_FILE`, else `<dir of the .uproject>/Saved/AgentLock.json` (found under
 `$CLAUDE_PROJECT_DIR` up to two levels deep, or `UE_PROJECT_DIR`), else `$CLAUDE_PROJECT_DIR/.claude/editor-lock.json`.
 MCP tool prefix: `UE_MCP_TOOL_PREFIX` (default `mcp__unreal__` — the server key in `.mcp.json` is `unreal`).
+`UE_EDITOR_DENY=live-coding` (comma list of operation names) denies an operation for every session outright — set it
+in the hook command (`UE_EDITOR_DENY=live-coding python …/editor-lock.py pre`) where Live Coding keeps crashing the editor.
 
 ### Install (opt-in, per project)
 

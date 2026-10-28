@@ -93,6 +93,13 @@ Things the tool schemas do not tell you. Each one cost at least one lost cycle i
 - **Live Coding:** touching any `.h` (UCLASS or not) → full build with the editor closed. Live Coding patches every source
   newer than the DLL, including other sessions' headers; it keeps function-local statics of the old module; static
   `FAutoConsoleCommand`s in a patched `.cpp` can re-register onto the wrong lambdas. Patches do not survive a restart.
+  With a **unity build** even a one-line `.cpp` change is unsafe: the patch recompiles the whole unity blob, so other
+  files' file-scope `TAutoConsoleVariable`s are constructed a second time, fail to register and stay null — the next
+  PIE crashes in `GetValueOnGameThread` inside a file nobody touched. A full `Build.bat` of a small module takes
+  seconds; where this bit twice, deny Live Coding in the editor-lock hook (`UE_EDITOR_DENY=live-coding`).
+- `py "<file>"` through a console command resolves a relative path against `Engine/Binaries/Win64`, not the
+  project: "Could not load Python file" lands only in the log and the call still returns "ran". Always pass an
+  absolute path, and delete the script's output file before the run — a stale one from the previous run reads as success.
 - After an editor restart Claude Code's MCP client stays "session expired" until `/mcp` → Reconnect. A raw JSON-RPC
   client technically works, but it bypasses the editor-lock hooks (they watch MCP tool calls) and the harness may
   deny it as a bypass — ask the human for `/mcp` instead of working around it.
