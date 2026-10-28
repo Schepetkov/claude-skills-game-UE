@@ -125,6 +125,12 @@ stat PSOPrecache               # collected metrics
 
 On a miss the log reports Type, PSOPrecachingState, Material, VertexFactoryType, MeshPassName, and shader hashes — that identifies the exact material/pass to fix. In Insights, watch the **`PSOPrecache: Missed`** and **`PSOPrecache: Too Late`** timers.
 
+**Loading a map package does not precache its PSOs.** Component PSOs are requested when the component registers in a
+world (`UStaticMeshComponent::OnRegister` → `PrecachePSOs`, `Engine/Private/Components/StaticMeshComponent.cpp`); a
+`LoadPackageAsync` of the next map only does material-level work for UI/decal/post-process materials
+(`UMaterialInstance::PostLoad`). Preloading a map under an intro saves the disk load, not the shader compile — that still
+happens after `OpenLevel`, so the loading screen must wait for `PipelineStateCache::NumActivePrecacheRequests() == 0`.
+
 Break into the debugger on a specific case: `r.PSOPrecache.BreakOnMaterialName`, `r.PSOPrecache.BreakOnPassName`, `r.PSOPrecache.BreakOnShaderHash`. Disable `r.PSOPrecache.UseBackgroundThreadForCollection` to make that debuggable.
 
 Other hitch sources, in order of frequency: synchronous asset loads, GC, level streaming, and the first spawn of any actor type.
@@ -182,6 +188,16 @@ in **`<Engine>/Saved/Profiling/CSV/`** with `FrameTime`, `GameThreadTime`, `Rend
 - A backgrounded window is frame-capped by the game's own setting (e.g. 30 fps) — pass an `-ini:GameUserSettings:` override.
 - The first run compiles shaders: take the median of three. Another editor of the same machine open = numbers up to 2× worse.
 - Commands at a frame: `"-csvExecCmds=400:<cmd> <arg>,450:HighResShot 1"` (comma-separated, args with spaces).
+  `HighResShot` has no UI; **`shot showui`** keeps loading screens and overlays. Frame numbers only map to time at a fixed
+  rate: add `"-ExecCmds=t.MaxFPS 30"`, else an uncapped run (200+ fps) passes the moment before the shot.
+- A run that ends on its own timer (no `Capture Stop requested` line) still writes the CSV at exit: anchor its last
+  frame at the exit line of the log to line frames up with log events.
+- **An uncooked `-game` does not measure loading or shader stutter.** Measured 2026-10-28 (UE 5.8.1, same map, cold
+  driver cache): `LogPSOHitching: ... 0 of them were precached` (component precaching does not apply), async loading
+  runs on the game thread per frame (a 75-package background load: 3.6 s at ~200 fps, 9.5 s at 30 fps; 0.27 s packaged),
+  textures are decoded on demand (`LogTextureFormatOodle` mid-run). Packaged Development build, same scene: the load
+  hitches gone, the real ones are `PSOPrecacheState: Missed`. Judge load times and PSO hitches only on a packaged build;
+  `-clearPSODriverCache` gives the cold first launch (it deletes the GPU vendor's PSO cache folder).
 ## Frame budget: state it before optimizing
 
 At 60 fps you have **16.6 ms**; at 30 fps, 33.3 ms. Split it explicitly, e.g. for 60 fps:
