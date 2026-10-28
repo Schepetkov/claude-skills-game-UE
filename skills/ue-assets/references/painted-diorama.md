@@ -182,3 +182,21 @@ Mechanics that worked:
   or the line glues neighbours into one piece.
 - Translucent backdrop/cloud cylinders centred on the origin sort ambiguously against translucent props: give them
   negative translucency sort priority.
+
+### When the camera comes close: what the second round of reviews taught
+
+The rules above held for a camera at its usual distance. When the human flew the free camera into the clusters (10–30 m,
+looking down 15–35°), seven more send-backs followed:
+
+| Wrong | What the human saw | Right |
+|---|---|---|
+| A tall card near the camera, any contact blob or sinking into the floor | "everything hangs in the air" | a painting drawn side-on cannot stand on the floor seen from above. Anything the camera reaches that is tall (columns, pedestals, trees, graves) is a **3D mesh**; the same composed layout places it (scale the mesh to the card's height) |
+| Low painted heaps and urns kept as cards | still "hanging" | **fold the card's foot onto the floor**: give the quad a few rows, and in WPO lay the vertices below a fold height (~20 % for low heaps, ~10 % for urns) on the ground toward the camera, standing the rest on the fold line. The drawn base then lies on the floor in perspective |
+| A contact blob dark only at its centre | invisible: its centre is behind the card | dense core at the foot plus a wide soft ring |
+| The human's "it hangs" answered by removing the pieces | "I asked you to fix it, not remove it" | a defect report means repair; remove only on an explicit "remove" |
+| Pack meshes picked by name (rubble, ground stones, root patches) | "you can only look at them from one side, part is missing" | many pack meshes are open shells, modelled against a wall or flush with a sculpted ground. Before using one: **four copies turned 0/90/180/270° in one frame** — a shell vanishes or is cut on some. Counting open border edges does not tell: merged pieces and trees are "open" too |
+| A flat 3D patch laid level on mounds / sunk to the lowest point under it | the ground pokes through it; a heap half-buried on a slope | low props tilt to the slope across their footprint and sit at their centre; upright ones stay plumb |
+| A 2.9M-triangle hero prop reused as scatter | — (found by the triangle count) | check triangles before a mesh goes into a layout |
+| The approved trial existed only in the running game; the session restarted it | "why did you roll it back?" | what the human praises goes on disk at once |
+| Rules written in one skill, another agent session built a map on the same set | "did you not save the rules?" | enforce them in the builder (a validator that refuses a wrong table) and link them from every skill an agent arrives through |
+
