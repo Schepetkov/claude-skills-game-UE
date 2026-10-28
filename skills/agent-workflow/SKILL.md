@@ -95,6 +95,8 @@ duplicates. Checklist: [references/memory-hygiene.md](references/memory-hygiene.
 - **Ask the human only for what only they know**: taste, design intent, priorities, what "done" looks like,
   anything irreversible or outward-facing (publishing, deleting, spending money).
 - When asking, offer a recommendation and the alternatives in one message — never an open "what do you want?".
+- When asking whether to delete or keep something, **say what it is and where it came from** ("the old start-up movie
+  another session rendered on the 25th, unused since today") — a bare file name gets "what is that?" back and costs a round.
 
 ## 5. Independent review
 
