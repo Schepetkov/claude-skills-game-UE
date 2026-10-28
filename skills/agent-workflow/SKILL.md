@@ -97,6 +97,16 @@ duplicates. Checklist: [references/memory-hygiene.md](references/memory-hygiene.
 - When asking, offer a recommendation and the alternatives in one message — never an open "what do you want?".
 - When asking whether to delete or keep something, **say what it is and where it came from** ("the old start-up movie
   another session rendered on the 25th, unused since today") — a bare file name gets "what is that?" back and costs a round.
+- **When "right" is the human's taste (where a prop sits, an angle, a pose), hand them the control first** — an
+  editable socket/parameter and a preview that really shows the context (check it yourself before sending the
+  instructions). Guessing "natural" over several rounds cost two hours once; the human set it in two minutes.
+
+## Enforce skill use — a hook, not a reminder
+
+"Load the matching skill before working" written in CLAUDE.md gets skipped under pressure; the agent then improvises
+one-off scripts where the skill already has a tool. [`hooks/skill-gate.py`](hooks/skill-gate.py): on each prompt it
+routes the human's words to skills (`.claude/skill-routes.json`, stems per skill), and a `PreToolUse` gate denies
+every tool but `Skill` until those skills are loaded. When the gate misses a word, add the stem — don't work around it.
 
 ## 5. Independent review
 
