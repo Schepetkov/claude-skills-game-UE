@@ -185,6 +185,9 @@ General, but especially load-bearing for strategy/simulation UIs:
 | PIE instance thrown out of the viewport during work | `CompileWidgetBlueprint` of a live WBP while PIE runs — check `IsPIERunning` first |
 | Unlit widget materials blown out on a dark map | widget emissive is multiplied by scene exposure — run the colour through `EyeAdaptationInverse` |
 | World-space widget smeared over animated meshes | translucent quad without depth before TSR — `TranslucencyPass = MTP_AfterMotionBlur` |
+| Full-screen widget added with `AddWidget` to an Overlay is 0×0 / clicks and drops go straight to the viewport | `UOverlaySlot` defaults to `HAlign_Left` / `VAlign_Top` (OverlaySlot.cpp) — set both to Fill explicitly |
+| During a UMG drag-drop the board/world under the pointer is the wrong cell or none; drop lands nowhere | Slate sends `OnDragOver`, not `OnMouseMove`, so `FSceneViewport` keeps a stale mouse: `GetHitResultUnderCursor` / `GetMousePosition` lie. Trace from the event: `USlateBlueprintLibrary::AbsoluteToViewport(Event.GetScreenSpacePosition())` → `GetHitResultAtScreenPosition`, in `NativeOnDragOver` and `NativeOnDrop` |
+| A transparent full-screen drop zone blocks the game's own "is the pointer over UI" check | the zone is the deepest hit-testable widget — let that check recognise it (compare the hit path's last widget with the zone's `GetCachedWidget()`), or keep the zone Collapsed outside the editing mode |
 
 ## Finding the engine source
 
