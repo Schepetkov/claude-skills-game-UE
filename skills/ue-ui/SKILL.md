@@ -151,6 +151,7 @@ General, but especially load-bearing for strategy/simulation UIs:
 - **Undo for anything not yet committed.** If the design forbids undo, the confirm step becomes mandatory.
 - **Information density is a feature** for strategy players. Provide full numeric breakdowns in tooltips — and make them keyboard/gamepad reachable, not hover-only.
 - **Give a readable log of what happened** after AI or opponent actions. Drive it from replicated result state (see `ue-networking`), not from fire-and-forget events.
+- **One icon per unit earned, its state on the icon.** When a reward is "one token per difficulty step", show one row with one token per step: taken - the icon as is (a soft glow under it), not taken - greyed and struck through. Rows of 1 / 2 / 3 icons copied from a star-rating layout read as "this step pays 3". Swapping only the texture when the meaning of the count changed is how that slips in - redo the layout with the meaning (observed: a human sent such a card back at once).
 
 ## Symptom → cause
 
