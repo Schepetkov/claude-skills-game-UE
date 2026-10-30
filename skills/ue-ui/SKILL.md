@@ -172,6 +172,7 @@ General, but especially load-bearing for strategy/simulation UIs:
 | Box/9-slice frame drawn as a thin line, "fixed" by touching the texture | margins use the texture proxy's size, created once on first paint while the texture was still compiling. `FTextureCompilingManager::FinishCompilation` + `ReleaseDynamicResource(Brush)` before use |
 | 9-slice corners the wrong size | corner on screen = **texture** width × Margin; `ImageSize` does not matter — size the texture for the screen |
 | UI texture blurry / grey box in PIE | texture in World group with mips/streaming — UI group, `NoMipmaps` or NeverStream |
+| Icon drawn much smaller than its texture looks jagged / "pixelated" (a 400 px star at 30 px) | `NoMipmaps` + minification: Slate samples the full image, every screen pixel hits one texel. Non-power-of-two textures get no mips at all — pad to a POT square, `TMGS_SimpleAverage`, or ship the texture at the drawn size |
 | `FSlateDrawElement::MakeBox` ignores the brush tint | it tints with the argument colour — pass `Brush.TintColor * InWidgetStyle` |
 | RoundedBox not drawn | corner radius larger than half the height |
 | Border with collapsed content vanishes | a `UBorder` sizes to its content; keep an empty SizeBox instead of collapsing |
