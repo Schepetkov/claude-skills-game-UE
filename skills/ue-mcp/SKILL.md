@@ -262,6 +262,7 @@ off-screen). An optional `RunConsole` MCP tool (editor module) runs it from the 
 | Need console/cvars or Python from the agent | no shipped tool — add a project `RunConsole` tool; details in field-notes |
 | Another session stopped your PIE / closed the editor | no editor lock — install the hook ([references/parallel-sessions.md](references/parallel-sessions.md)) |
 | `RunConsole` returns "no output" for a command that logs | `UE_LOG` is not captured — make the command write a file (scene probe does) |
+| Fatal "Old world ... not cleaned up by garbage collection" after copying a map from Python | `duplicate_asset(map)` keeps the copy in memory; `load_level` of it kills the editor for every session. Copy the `.umap` file on disk while the editor is closed (or the source is not loaded), then only `load_level` the copy |
 
 ## Related
 

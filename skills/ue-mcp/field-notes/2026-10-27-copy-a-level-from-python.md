@@ -1,7 +1,7 @@
 ---
 symptom: editor crashes "Old world ... not cleaned up by garbage collection while loading new map" / Fatal error EditorServer.cpp after copying a map from Python; or the SOURCE .umap shows modified after a "copy"
 engine: "5.8.1"
-status: observed
+status: verified
 date: 2026-10-27
 source: two failed attempts in one session (crash log + git status of the source map)
 ---
