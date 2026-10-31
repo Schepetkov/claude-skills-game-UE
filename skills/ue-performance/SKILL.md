@@ -171,6 +171,8 @@ the disregard-for-GC set in cooked builds (closed in `PreInitPostStartupScreen`)
 on a dangling pointer. PIE has no disregard set and never shows it. Cache with `TStrongObjectPtr` / `AddToRoot` instead;
 subsystems are created after the set closes and may use `UPROPERTY`. Without a debugger: dbghelp via ctypes on the
 minidump + `dumpbin /disasm`; a crash in `FlushQueuedReferences` points at the owner of the bad field.
+[`scripts/minidump_stack.py`](scripts/minidump_stack.py) does the dbghelp part: `UEMinidump.dmp` → the crashing thread's
+frames with function and file:line (a stack scan, so read the first project frames under the faulting engine ones).
 These smooth GC across frames instead of paying it in one spike — the right first move when you see periodic identical-size hitches.
 
 **Streaming (5.8):**
