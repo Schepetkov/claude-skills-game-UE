@@ -89,7 +89,7 @@ bEnableToolSearch=True
 |---|---|---|
 | `ServerUrlPath` | `/mcp` | URL base path. Invalid paths are silently replaced with the default and logged |
 | `ServerPortNumber` | `8000` | change it if 8000 is taken — two editors cannot share a port |
-| `bAutoStartServer` | **`False`** | start the server on module startup instead of by console command |
+| `bAutoStartServer` | **`False`** | start the server on module startup instead of by console command. **5.8.4+:** ignored in commandlets (cook etc.), so they no longer race an open editor for the port; a commandlet that needs the server passes `-ModelContextProtocolStartServer` |
 | `bEnableToolSearch` | **`True`** | see below — this one materially changes agent behaviour |
 
 ### `bEnableToolSearch` — leave it on

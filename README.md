@@ -220,7 +220,7 @@ Rules and formats: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Engine version
 
-Written and verified against **UE 5.8 / 5.8.1**.
+Written and verified against **UE 5.8 / 5.8.1**; re-checked against the 5.8.2 → 5.8.4 hotfix diff (no API or behaviour change the skills rely on; one MCP note added).
 
 Most content holds for 5.5+, but 5.8-specific items are marked as such. Anything Epic renames will drift — which is exactly why every skill leads with "grep the source first" rather than asking you to trust the table.
 
